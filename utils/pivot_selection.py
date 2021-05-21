@@ -115,7 +115,7 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
             pivotsCounts.append(bigram_vectorizer_unlabeled.get_feature_names().index(name))
             c+=1
 
-            print("feature is ",name," it MI is ",RMI[MI_word]," in source ",s_count," in target ",t_count)
+            print("feature is: ",name," its MI is: ",RMI[MI_word], ". Counts in source ", s_count," in target ",t_count)
 
         if c>=max(pivot_num):
             break
@@ -123,9 +123,10 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     sfx = ''
     if n_gram[1] == 2:
         sfx = "_bi"
+
     filename = base_path + 'data/pivots/' + src + "_to_" + dest
-    if not os.path.exists(os.path.dirname(filename)):
-        os.makedirs(os.path.dirname(filename))
+    if not os.path.exists(filename):
+        os.makedirs(filename)
 
     for num in pivot_num:
         with open(filename + "/" + str(pivot_num[0]) + sfx, 'wb') as f:
