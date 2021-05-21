@@ -2,7 +2,7 @@
 # Run this before if needed : sed -i -e 's/\r$//' run_full_experiment.sh
 # Finally, run this command : sh run_full_experiment.sh\
 
-MODEL=books_to_dvd
+MODEL=electronics_to_kitchen # books_to_dvd
 SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
 TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
 
@@ -21,14 +21,14 @@ python utils/pivot_selection.py \
 # Finetuning params
 PIVOT_PROB=0.5
 NON_PIVOT_PROB=0.1
-NUM_PRE_TRAIN_EPOCHS=20
-SAVE_FREQ=20
+NUM_PRE_TRAIN_EPOCHS=1 # TODO Was 20
+SAVE_FREQ=1 # TODO Was 20
 UNFROZEN_BERT_LAYERS=8
 
 mkdir -p models/${MODEL}
 
 OUTPUT_DIR_NAME=models/${MODEL}
-PIVOTS_PATH=data/pivots/${MODEL}/100_bi
+PIVOTS_PATH=data/pivots/${MODEL}/${NUM_PIVOTS}_bi
 
 python perl_pretrain.py \
  --src_domain=${SRC_DOMAIN} \
@@ -43,14 +43,16 @@ python perl_pretrain.py \
  --init_output_embeds \
  --train_output_embeds
 
+ # TODO init_output_embeds is "R"-PERL?
 
-# Step 3 - Train a classifier on source domain labeled data the predict and evaluate on target domain.
+# Step 3 - Train a classifier on source domain labeled data then predict and evaluate on target domain.
 # Supervised task params
-PRE_TRAINED_EPOCH=20
+PRE_TRAINED_EPOCH=1 # TODO Was 20
 CNN_OUT_CHANNELS=32
 BATCH_SIZE=32
 CNN_FILTER_SIZE=9
 FOLD_NUM=1
+NUM_TRAIN_EPOCHS=1
 
 mkdir -p 5-fold-hyper-tune
 mkdir 5-fold-hyper-tune/${MODEL}/
@@ -74,8 +76,7 @@ python supervised_task_learning.py \
 --cnn_out_channels=${CNN_OUT_CHANNELS} \
 --learning_rate=5e-5 \
 --train_batch_size=${BATCH_SIZE} \
---use_fold=True \
---fold_num=${FOLD_NUM} \
+--num_train_epochs=${NUM_TRAIN_EPOCHS} \
 --save_according_to=loss
 
 COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin-final_eval_results.txt
