@@ -384,7 +384,7 @@ def main():
                         required=True,
                         help="The output directory where the model predictions and checkpoints will be written.")
     parser.add_argument("--log_dir",
-                        default='../log',
+                        default='log',
                         type=str,
                         help="The log output dir.")
     parser.add_argument("--load_model",
@@ -597,7 +597,7 @@ def main():
                                                                  out_channels=args.cnn_out_channels,
                                                                  output_layer_num=args.bert_output_layer_num)
 
-        # load pre train modek weights
+        # load pre train model weights
         if args.model_name is not None:
             print("--- Loading model:", args.output_dir + args.model_name)
             model.load_state_dict(torch.load(args.output_dir + args.model_name), strict=False)
