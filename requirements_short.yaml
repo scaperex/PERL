@@ -1,0 +1,14 @@
+name: perl
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - numpy
+  - pytorch-pretrained-bert
+  - scikit-learn
+  - tensorboardX
+  - pytorch
+  - torchvision
+  - tqdm
+
