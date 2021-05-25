@@ -2,7 +2,7 @@
 # Run this before if needed : sed -i -e 's/\r$//' run_full_experiment.sh
 # Finally, run this command : sh run_full_experiment.sh\
 
-MODEL=electronics_to_kitchen # books_to_dvd
+MODEL=feminist_to_abortion # books_to_dvd
 SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
 TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
 
@@ -23,7 +23,7 @@ PIVOT_PROB=0.5
 NON_PIVOT_PROB=0.1
 NUM_PRE_TRAIN_EPOCHS=1 # TODO Was 20
 SAVE_FREQ=1 # TODO Was 20
-UNFROZEN_BERT_LAYERS=8
+UNFROZEN_BERT_LAYERS=3  # TODO was 8
 
 mkdir -p models/${MODEL}
 
@@ -41,7 +41,8 @@ python perl_pretrain.py \
  --non_pivot_prob=${NON_PIVOT_PROB} \
  --num_of_unfrozen_bert_layers=${UNFROZEN_BERT_LAYERS} \
  --init_output_embeds \
- --train_output_embeds
+ --train_output_embeds \
+
 
  # TODO init_output_embeds is "R"-PERL?
 
