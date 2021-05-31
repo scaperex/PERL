@@ -3,11 +3,14 @@
 #####################################################################################
 
 import argparse
+import logging
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import mutual_info_score
 import pickle
 import os
 from pytorch_pretrained_bert import BertTokenizer
+from utils.logger import create_and_configer_logger
 
 
 def GetTopNMI(n, X, target):
@@ -42,6 +45,7 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     Returns:
     list of pivots
    """
+    logger = logging.getLogger(__name__)
 
     # Load pre-trained model tokenizer (vocabulary):
     if tokenizer is not None:
@@ -66,6 +70,9 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     src_count = 20
     dest_count = 20
     un_count = 40
+
+    logger.info(f"pivoting for source data {src} and target data {dest}")
+    logger.info(f"pivot_num = {pivot_num}, pivot_min_st = {pivot_min_st}")
 
     # sets x train matrix for classification
     print('starting bigram_vectorizer for train data...')
@@ -114,8 +121,8 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
             names.append(name)
             pivotsCounts.append(bigram_vectorizer_unlabeled.get_feature_names().index(name))
             c+=1
-
-            print("feature is: ",name," its MI is: ",RMI[MI_word], ". Counts in source ", s_count," in target ",t_count)
+            logger.info(f"feature is: {name} its MI is: {RMI[MI_word]} Counts in source {s_count} in target {t_count}")
+            # print("feature is: ",name," its MI is: ",RMI[MI_word], ". Counts in source ", s_count," in target ",t_count)
 
         if c>=max(pivot_num):
             break
@@ -163,8 +170,14 @@ def main():
                         default='bigram',
                         type=str,
                         help="N_gram length.")
+    parser.add_argument("--log_name",
+                        default='log/pivot.log',
+                        type=str)
 
     args = parser.parse_args()
+
+    logger = create_and_configer_logger(log_name=args.log_name)
+    logger.info(f"{'='*30}Starting new pivot creation{'='*30}")
 
     if args.n_gram == "bigram":
         n_gram = (1, 2)

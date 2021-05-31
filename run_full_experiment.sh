@@ -10,20 +10,22 @@ TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the 
 # Pivot selection params
 NUM_PIVOTS=100
 PIV_MN_ST=20
+LOG_NAME = "log/pivot.log"
 
 python utils/pivot_selection.py \
 --pivot_num=${NUM_PIVOTS} \
 --pivot_min_st=${PIV_MN_ST} \
 --src=${SRC_DOMAIN} \
---dest=${TRG_DOMAIN}
+--dest=${TRG_DOMAIN} \
+--log_name=${LOG_NAME}
 
 # Step 2 - Run pivot-based finetuning on a pre-trained BERT
 # Finetuning params
 PIVOT_PROB=0.5
 NON_PIVOT_PROB=0.1
-NUM_PRE_TRAIN_EPOCHS=1 # TODO Was 20
-SAVE_FREQ=1 # TODO Was 20
-UNFROZEN_BERT_LAYERS=3  # TODO was 8
+NUM_PRE_TRAIN_EPOCHS=1
+SAVE_FREQ=1
+UNFROZEN_BERT_LAYERS=3
 
 mkdir -p models/${MODEL}
 

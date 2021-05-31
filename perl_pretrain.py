@@ -39,14 +39,19 @@ if not 'utils' in sys.path:
 
 from perl_for_finetune import BertForMaskedLM
 
+from utils.logger import create_and_configer_logger
+
+logger = create_and_configer_logger(log_name="log/perl_pretrained.log")
+
+
 # TODO: if you are using 'pytorch 1.5.0' you cannot run parallel. In case you are using 'pytorch 1.4.0' you can comment
 #  the following line
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+#                     datefmt='%m/%d/%Y %H:%M:%S',
+#                     level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 
 class BERTDataset(Dataset):
@@ -555,6 +560,8 @@ def main():
 
     args = parser.parse_args()
 
+    logger.info(args)
+
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         n_gpu = torch.cuda.device_count()
@@ -727,6 +734,10 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
+                # TODO delete
+                # if step == 100:
+                #     print(f"{'='*10} Breaking the Training {'='*10}")
+                #     break
             if (((cnt + 1) % args.save_every_num_epochs) == 0):
                 # Save a trained model
                 logger.info("** ** * Saving fine - tuned model ** ** * ")

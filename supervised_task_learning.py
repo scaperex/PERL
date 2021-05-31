@@ -49,12 +49,17 @@ if not 'utils' in sys.path:
 
 from classification_model import CNNBertForSequenceClassification
 from logger import Logger
+from utils.logger import create_and_configer_logger
+
 
 # TODO: if you are using 'pytorch 1.5.0' you cannot run parallel. In case you are using 'pytorch 1.4.0' you can comment
 #  the following line
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+
+logger = create_and_configer_logger(log_name="log/supervised_task.log")
+
 
 
 class InputExample(object):
