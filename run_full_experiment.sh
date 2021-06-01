@@ -80,7 +80,7 @@ python supervised_task_learning.py \
 --learning_rate=5e-5 \
 --train_batch_size=${BATCH_SIZE} \
 --num_train_epochs=${NUM_TRAIN_EPOCHS} \
---save_according_to=loss
+--save_according_to=loss \
 
 COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin-final_eval_results.txt
 

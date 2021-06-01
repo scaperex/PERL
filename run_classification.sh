@@ -4,7 +4,7 @@
 
 mkdir -p 5-fold-hyper-tune
 
-for MODEL in books_to_dvd
+for MODEL in feminist_to_abortion
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
@@ -39,8 +39,6 @@ do
             --cnn_out_channels=${OUT_CHANNELS} \
             --learning_rate=5e-5 \
             --train_batch_size=${BATCH_SIZE} \
-            --use_fold=True \
-            --fold_num=${FOLD_NUM} \
             --save_according_to=loss
 
             COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${EPOCH}.bin-final_eval_results.txt
@@ -48,8 +46,6 @@ do
             COPY_TO_PATH=5-fold-hyper-tune/${MODEL}/ep-${EPOCH}_ch-${OUT_CHANNELS}_batch-${BATCH_SIZE}_filt-${FILTER_SIZE}_fold-${FOLD_NUM}.txt
             cp ${COPY_FROM_PATH} ${COPY_TO_PATH}
             rm ${TEMP_DIR}/*
-              done
-            done
           done
         done
       done
