@@ -11,4 +11,6 @@ dependencies:
   - pytorch
   - torchvision
   - tqdm
+  - pip:
+      tweet-preprocessor
 
