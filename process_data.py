@@ -81,12 +81,15 @@ def preprocess_stance_data(data_path, label_name=None):
         # Remove tweets with multiple classes
         df = df[df["Target"].str.contains(",") == False]
 
+    df['Tweet'] = df['Target'] + " " + df['Tweet']
+
     df['Target'].replace({'Hillary Clinton': 'hillary',
                           'Feminist Movement': 'feminist',
                           'Legalization of Abortion': 'abortion',
                           'Donald Trump': 'trump',
                           'Climate Change is a Real Concern': 'climate',
                           'Atheism': 'atheism'}, inplace=True)
+
 
     # TODO choose clean method
     # df['Tweet'].replace({'#': '', "@": ''}, inplace=True, regex=True)
