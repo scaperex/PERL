@@ -1,8 +1,19 @@
 ## Changes due to stance labels
 
+## TODO
+1. Run code with stance data - Use flag
+ - Pivots
+- classifier 3 labels
+- make sure bert does not use labels
+2. Fix pivots by Refael
+3. Full run something
+
+
+
+
 Main Question - 
 what is the input?
-SUpposedly, 2 texts, tweet and domain.
+Supposedly, 2 texts, tweet and domain.
 
 
 Necessary because label relates between tweet and domain. 
