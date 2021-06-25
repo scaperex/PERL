@@ -62,9 +62,9 @@ class BERTDataset(Dataset):
         self.seq_len = seq_len
         self.on_memory = on_memory
         self.corpus_lines = corpus_lines  # number of non-empty lines in input corpus
-        self.src_corpus_path = "data/" + src_domain + "/unlabeled"
-        self.src_train_corpus_path = "data/" + src_domain + "/train"
-        self.trg_corpus_path = "data/" + trg_domain + "/unlabeled"
+        self.src_corpus_path = src_domain + "/unlabeled"
+        self.src_train_corpus_path = src_domain + "/train"
+        self.trg_corpus_path = trg_domain + "/unlabeled"
         self.encoding = encoding
         self.current_doc = 0  # to avoid random sentence from same doc
         self.pivot2id_dict = pivot2id_dict
@@ -623,8 +623,8 @@ def main():
 
     # Prepare model
     model = BertForMaskedLM.from_pretrained(args.bert_model, output_dim=len(pivot2id_dict),
-                                            init_embed=args.init_output_embeds, src=args.src_domain,
-                                            trg=args.trg_domain)
+                                            init_embed=args.init_output_embeds, src=args.src_domain.split(os.sep)[1],
+                                            trg=args.trg_domain.split(os.sep)[1])
     if args.fp16:
         model.half()
     model.to(device)
@@ -735,9 +735,9 @@ def main():
                     optimizer.zero_grad()
                     global_step += 1
                 # TODO delete
-                # if step == 100:
-                #     print(f"{'='*10} Breaking the Training {'='*10}")
-                #     break
+                if step == 100:
+                    print(f"{'='*10} Breaking the Training {'='*10}")
+                    break
             if (((cnt + 1) % args.save_every_num_epochs) == 0):
                 # Save a trained model
                 logger.info("** ** * Saving fine - tuned model ** ** * ")

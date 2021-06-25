@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run this before if needed : sed -i -e 's/\r$//' run_classification.sh
 # Finally, run this command : sh run_classification.sh
+DATA_DIR=data
 
 mkdir -p 5-fold-hyper-tune
 
@@ -14,7 +15,7 @@ do
   mkdir -p ${TEMP_DIR}/
   mkdir -p 5-fold-hyper-tune/${MODEL}/
 
-  MODELS_DIR=models/${MODEL}/
+  MODELS_DIR=models/${MODEL}
 
   for EPOCH in 1             # for hyper-tuning run over [20 40 60]
   do
@@ -26,11 +27,11 @@ do
         do
           for FOLD_NUM in 1   # for five-fold run over [1 2 3 4 5]
           do
-            cp ${MODELS_DIR}pytorch_model${EPOCH}.bin ${TEMP_DIR}
+            cp ${MODELS_DIR}/pytorch_model${EPOCH}.bin ${TEMP_DIR}
 
             python supervised_task_learning.py \
-            --in_domain_data_dir=data/${SRC_DOMAIN}/ \
-            --cross_domain_data_dir=data/${TRG_DOMAIN}/ \
+            --in_domain_data_dir=${DATA_DIR}/${SRC_DOMAIN}/ \
+            --cross_domain_data_dir=${DATA_DIR}/${TRG_DOMAIN}/ \
             --do_train \
             --output_dir=${TEMP_DIR}/ \
             --load_model \

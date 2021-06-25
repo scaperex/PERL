@@ -1,22 +1,23 @@
 #!/bin/bash
 # Run this before if needed : sed -i -e 's/\r$//' run_full_experiment.sh
 # Finally, run this command : sh run_full_experiment.sh\
-
+DATA_DIR=data
 MODEL=feminist_to_abortion # books_to_dvd
 SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
 TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
+MODELS_DIR=models/${MODEL}
 
 # Step 1 - Select pivot features
 # Pivot selection params
 NUM_PIVOTS=100
 PIV_MN_ST=20
-LOG_NAME = "log/pivot.log"
+LOG_NAME="log/pivot.log"
 
 python utils/pivot_selection.py \
 --pivot_num=${NUM_PIVOTS} \
 --pivot_min_st=${PIV_MN_ST} \
---src=${SRC_DOMAIN} \
---dest=${TRG_DOMAIN} \
+--src=${DATA_DIR}/${SRC_DOMAIN} \
+--dest=${DATA_DIR}/${TRG_DOMAIN} \
 --log_name=${LOG_NAME}
 
 # Step 2 - Run pivot-based finetuning on a pre-trained BERT
@@ -27,14 +28,14 @@ NUM_PRE_TRAIN_EPOCHS=1
 SAVE_FREQ=1
 UNFROZEN_BERT_LAYERS=3
 
-mkdir -p models/${MODEL}
+mkdir -p ${MODELS_DIR}
 
-OUTPUT_DIR_NAME=models/${MODEL}
-PIVOTS_PATH=data/pivots/${MODEL}/${NUM_PIVOTS}_bi
+OUTPUT_DIR_NAME=${MODELS_DIR}
+PIVOTS_PATH=${DATA_DIR}/pivots/${MODEL}/${NUM_PIVOTS}_bi
 
 python perl_pretrain.py \
- --src_domain=${SRC_DOMAIN} \
- --trg_domain=${TRG_DOMAIN} \
+ --src_domain=${DATA_DIR}/${SRC_DOMAIN} \
+ --trg_domain=${DATA_DIR}/${TRG_DOMAIN} \
  --pivot_path=${PIVOTS_PATH} \
  --output_dir=${OUTPUT_DIR_NAME} \
  --num_train_epochs=${NUM_PRE_TRAIN_EPOCHS} \
@@ -60,17 +61,16 @@ NUM_TRAIN_EPOCHS=1
 mkdir -p 5-fold-hyper-tune
 mkdir 5-fold-hyper-tune/${MODEL}/
 
-TEMP_DIR=models/${MODEL}/temp
+TEMP_DIR=${MODELS_DIR}/temp
 mkdir -p ${TEMP_DIR}/
 mkdir -p 5-fold-hyper-tune/${MODEL}/
 
-MODELS_DIR=models/${MODEL}/
 
-cp ${MODELS_DIR}pytorch_model${PRE_TRAINED_EPOCH}.bin ${TEMP_DIR}
+cp ${MODELS_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin ${TEMP_DIR}
 
 python supervised_task_learning.py \
---in_domain_data_dir=data/${SRC_DOMAIN}/ \
---cross_domain_data_dir=data/${TRG_DOMAIN}/ \
+--in_domain_data_dir=${DATA_DIR}/${SRC_DOMAIN}/ \
+--cross_domain_data_dir=${DATA_DIR}/${TRG_DOMAIN}/ \
 --do_train \
 --output_dir=${TEMP_DIR}/ \
 --load_model \

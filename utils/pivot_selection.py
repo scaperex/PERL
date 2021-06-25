@@ -52,16 +52,18 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
         tokenizer = BertTokenizer.from_pretrained(tokenizer).tokenize
 
     base_path = os.getcwd() + os.sep
-    pivotsCounts= []
+    pivotsCounts = []
+    data_dir, src = src.split(os.sep)
+    _, dest = dest.split(os.sep)
 
-    src_path = "data/" + src + os.sep
+    src_path = os.path.join(data_dir, src) + os.sep
     with open(src_path + "train", 'rb') as f:
         (train, train_labels) = pickle.load(f)
     with open(src_path + "unlabeled", 'rb') as f:
         source = pickle.load(f)
 
     # gets all the train and test for pivot classification
-    dest_path = "data/" + dest + os.sep
+    dest_path = os.path.join(data_dir, dest) + os.sep
     with open(dest_path + "unlabeled", 'rb') as f:
         target = pickle.load(f)
 
@@ -131,7 +133,8 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     if n_gram[1] == 2:
         sfx = "_bi"
 
-    filename = base_path + 'data/pivots/' + src + "_to_" + dest
+
+    filename = base_path + data_dir + '/pivots/' + src + "_to_" + dest
     if not os.path.exists(filename):
         os.makedirs(filename)
 

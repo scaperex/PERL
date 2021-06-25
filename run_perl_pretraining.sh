@@ -8,22 +8,24 @@ NUM_PRE_TRAIN_EPOCHS=1
 SAVE_FREQ=1
 UNFROZEN_BERT_LAYERS=3
 NUM_PIVOTS=100
+DATA_DIR=data
 
 for MODEL in feminist_to_abortion
 do
+  MODELS_DIR=models/${MODEL}
+
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
 
-  mkdir -p models/${MODEL}
+  mkdir -p ${MODELS_DIR}
 
-  OUTPUT_DIR_NAME=models/${MODEL}
   PIVOTS_PATH=data/pivots/${MODEL}/${NUM_PIVOTS}_bi
 
   python perl_pretrain.py \
-   --src_domain=${SRC_DOMAIN} \
-   --trg_domain=${TRG_DOMAIN} \
+ --src_domain=${DATA_DIR}/${SRC_DOMAIN} \
+ --trg_domain=${DATA_DIR}/${TRG_DOMAIN} \
    --pivot_path=${PIVOTS_PATH} \
-   --output_dir=${OUTPUT_DIR_NAME} \
+   --output_dir=${MODELS_DIR} \
    --num_train_epochs=${NUM_PRE_TRAIN_EPOCHS} \
    --save_every_num_epochs=${SAVE_FREQ} \
    --pivot_prob=${PIVOT_PROB} \

@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import re
 from sklearn.model_selection import train_test_split
 import preprocessor as p
+
+DATA_DIR = 'data'
+
+
 def analyze_stance_data():
     df['Target'].value_counts().plot.bar(rot=45)
     plt.savefig('counts_per_domain.png', bbox_inches='tight')
@@ -65,7 +69,7 @@ def preprocess_stance_data(data_path, is_labeled):
         df['Sentiment'] = df['Sentiment'].astype(int)
 
     else:
-        df = pd.read_csv('StanceDataset/domain_tweets_all.txt', sep='\t', header=None)
+        df = pd.read_csv('RawStanceDataset/domain_tweets_all.txt', sep='\t', header=None)
         df.columns = ['tweet_ID', 'date', 'Tweet', 'hashtags', 'Target']
         # remove query hashtags and urls from tweets
 
@@ -86,7 +90,7 @@ def preprocess_stance_data(data_path, is_labeled):
     # Save files seperately per class
     for _class in ['hillary', 'feminist', 'abortion', 'trump',
                    'climate', 'atheism']:
-        save_path = os.path.join('data', _class)
+        save_path = os.path.join(DATA_DIR, _class)
         os.makedirs(save_path, exist_ok=True)
         x = df.loc[df["Target"] == _class, 'Tweet'].tolist()
 
@@ -105,6 +109,6 @@ def preprocess_stance_data(data_path, is_labeled):
                 pickle.dump(x, f)
 
 if __name__ == '__main__':
-    preprocess_stance_data("StanceDataset/full_data.xlsx", is_labeled=True)
-    preprocess_stance_data('StanceDataset/domain_tweets_all.txt', is_labeled=False)
+    preprocess_stance_data("RawStanceDataset/full_data.xlsx", is_labeled=True)
+    preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt', is_labeled=False)
 
