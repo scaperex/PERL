@@ -7,7 +7,6 @@ import re
 from sklearn.model_selection import train_test_split
 import preprocessor as p
 
-DATA_DIR = 'data'
 
 
 def analyze_stance_data():
@@ -57,16 +56,21 @@ def filter_hashtags(tweet: str, hashtags: str):
     tweet = re.sub(r"http\S+", "", tweet) # TODO change per decision
     return tweet
 
-def preprocess_stance_data(data_path, is_labeled):
-    if is_labeled:
+def preprocess_stance_data(data_path, label_name=None):
+    if label_name:
         df = pd.read_excel(data_path)
         df = df.drop('Opinion Towards', axis=1)
+        if label_name == 'Sentiment':
+            df['Sentiment'].replace({'pos': 1,
+                                     'neg': 0,
+                                     'other': None}, inplace=True)
+            df.dropna(inplace=True)
+            df['Sentiment'] = df['Sentiment'].astype(int)
 
-        df['Sentiment'].replace({'pos': 1,
-                                 'neg': 0,
-                                 'other': None}, inplace=True)
-        df.dropna(inplace=True)
-        df['Sentiment'] = df['Sentiment'].astype(int)
+        elif label_name == 'Stance':
+            df['Stance'].replace({'FAVOR': 1,
+                                  'AGAINST': 0,
+                                  'NONE': 2}, inplace=True)
 
     else:
         df = pd.read_csv('RawStanceDataset/domain_tweets_all.txt', sep='\t', header=None)
@@ -94,9 +98,9 @@ def preprocess_stance_data(data_path, is_labeled):
         os.makedirs(save_path, exist_ok=True)
         x = df.loc[df["Target"] == _class, 'Tweet'].tolist()
 
-        print(f"Saving {len(x)} is_labeled={is_labeled} {_class} tweets to {save_path}")
-        if is_labeled:
-            y = df.loc[df["Target"] == _class, 'Sentiment'].tolist()
+        print(f"Saving {len(x)} label_name={label_name} {_class} tweets to {save_path}")
+        if label_name:
+            y = df.loc[df["Target"] == _class, label_name].tolist()
             with open(os.path.join(save_path, 'test'), 'wb') as f:
                 pickle.dump((x, y), f)
             x_train, x_dev, y_train, y_dev = train_test_split(x, y, test_size=0.15, stratify=y, random_state=42)
@@ -108,7 +112,10 @@ def preprocess_stance_data(data_path, is_labeled):
             with open(os.path.join(save_path, 'unlabeled'), 'wb') as f:
                 pickle.dump(x, f)
 
+
 if __name__ == '__main__':
-    preprocess_stance_data("RawStanceDataset/full_data.xlsx", is_labeled=True)
-    preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt', is_labeled=False)
+    label = 'Stance'
+    DATA_DIR = 'stancedata' if label == 'Stance' else 'data'
+    preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
+    preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')
 
