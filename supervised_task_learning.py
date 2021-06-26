@@ -237,16 +237,16 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         label_id = label_map[example.label]
 
 
-        if ex_index < 1:
-            logger.info("*** Example ***")
-            logger.info("guid: %s" % (example.guid))
-            logger.info("tokens: %s" % " ".join(
-                [str(x) for x in tokens]))
-            logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-            logger.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
-            logger.info(
-                "segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
-            logger.info("label: %s (id = %d)" % (example.label, label_id))
+        # if ex_index < 1:
+        #     logger.info("*** Example ***")
+        #     logger.info("guid: %s" % (example.guid))
+        #     logger.info("tokens: %s" % " ".join(
+        #         [str(x) for x in tokens]))
+        #     logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
+        #     logger.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
+        #     logger.info(
+        #         "segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
+        #     logger.info("label: %s (id = %d)" % (example.label, label_id))
 
         features.append(
             InputFeatures(input_ids=input_ids,
@@ -354,7 +354,7 @@ def make_DataLoader(data_dir, processor, tokenizer, label_list, max_seq_length, 
         examples = examples[:N]
     features = convert_examples_to_features(
         examples, label_list, max_seq_length, tokenizer)
-    logger.info("***** Running evaluation on {}-set *****".format(mode))
+    logger.info("***** Running evaluation on {}-set {}*****".format(mode, data_dir))
     logger.info("  Num examples = %d", len(examples))
     logger.info("  Batch size = %d", batch_size)
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -441,8 +441,7 @@ def main():
                         default=False,
                         help="saves model weight each time epoch accuracy is maximum")
     parser.add_argument("--write_log_for_each_epoch",
-                        type=bool,
-                        default = False,
+                        action='store_true',
                         help = "whether to write log file at the end of every epoch or not")
     parser.add_argument("--max_seq_length",
                         default=128,

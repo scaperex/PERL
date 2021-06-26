@@ -478,12 +478,10 @@ def main():
     parser.add_argument("--pivot_prob",
                         default=0.5,
                         type=float,
-                        required=True,
                         help="Probability to mask a pivot.")
     parser.add_argument("--non_pivot_prob",
                         default=0.1,
                         type=float,
-                        required=True,
                         help="Probability to mask a non-pivot.")
     parser.add_argument("--max_seq_length",
                         default=128,
@@ -698,7 +696,8 @@ def main():
         logger.info("  Num steps = %d", num_train_optimization_steps)
 
         if args.local_rank == -1:
-            train_sampler = RandomSampler(train_dataset)
+            # TODO num_samples=20000 debug num_samples=20
+            train_sampler = RandomSampler(train_dataset, num_samples=20000, replacement=True)
         else:
             # TODO: check if this works with current data generator from disk that relies on next(file)
             # (it doesn't return item back by index)

@@ -40,7 +40,8 @@ do
             --cnn_out_channels=${OUT_CHANNELS} \
             --learning_rate=5e-5 \
             --train_batch_size=${BATCH_SIZE} \
-            --save_according_to=loss
+            --save_according_to=loss \
+            --write_log_for_each_epoch
 
             COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${EPOCH}.bin-final_eval_results.txt
 
