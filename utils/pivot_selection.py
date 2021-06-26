@@ -4,13 +4,12 @@
 
 import argparse
 import logging
-
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import mutual_info_score
 import pickle
 import os
 from pytorch_pretrained_bert import BertTokenizer
-from utils.logger import create_and_configer_logger
+from logger import create_and_configer_logger
 
 
 def GetTopNMI(n, X, target):
@@ -48,6 +47,8 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     logger = logging.getLogger(__name__)
 
     # Load pre-trained model tokenizer (vocabulary):
+    if tokenizer =='None':
+        tokenizer = None
     if tokenizer is not None:
         tokenizer = BertTokenizer.from_pretrained(tokenizer).tokenize
 
@@ -72,32 +73,47 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     src_count = 20
     dest_count = 20
     un_count = 40
+    token_pattern = r'\b\w+\b'
 
     logger.info(f"pivoting for source data {src} and target data {dest}")
     logger.info(f"pivot_num = {pivot_num}, pivot_min_st = {pivot_min_st}")
 
     # sets x train matrix for classification
     print('starting bigram_vectorizer for train data...')
-    bigram_vectorizer = CountVectorizer(ngram_range=n_gram, token_pattern=r'\b\w+\b', min_df=5,binary=True, tokenizer=tokenizer)
+    bigram_vectorizer = CountVectorizer(ngram_range=n_gram,
+                                        min_df=5,
+                                        binary=True,
+                                        tokenizer=tokenizer,
+                                        token_pattern=token_pattern)
     X_2_train = bigram_vectorizer.fit_transform(train).toarray()
     print('Done!')
 
     print('starting bigram_vectorizer for unlabled data...')
-    bigram_vectorizer_unlabeled = CountVectorizer(ngram_range=n_gram, token_pattern=r'\b\w+\b', min_df=un_count, binary=True, tokenizer=tokenizer)
+    bigram_vectorizer_unlabeled = CountVectorizer(ngram_range=n_gram,
+                                                  min_df=un_count,
+                                                  binary=True,
+                                                  tokenizer=tokenizer,
+                                                token_pattern=token_pattern)
     bigram_vectorizer_unlabeled.fit_transform(unlabeled).toarray()
     # X_2_train_unlabeled = bigram_vectorizer_unlabeled.fit_transform(unlabeled).toarray()
 
     print('Done!')
 
     print('starting bigram_vectorizer for source data...')
-    bigram_vectorizer_source = CountVectorizer(ngram_range=n_gram, token_pattern=r'\b\w+\b', min_df=src_count,
-                                               binary=True, tokenizer=tokenizer)
+    bigram_vectorizer_source = CountVectorizer(ngram_range=n_gram,
+                                               min_df=src_count,
+                                               binary=True,
+                                               tokenizer=tokenizer,
+                                        token_pattern=token_pattern)
     X_2_train_source = bigram_vectorizer_source.fit_transform(source).toarray()
     print('Done!')
 
     print('starting bigram_vectorizer for target data...')
-    bigram_vectorizer_labels = CountVectorizer(ngram_range=n_gram, token_pattern=r'\b\w+\b', min_df=dest_count,
-                                               binary=True, tokenizer=tokenizer)
+    bigram_vectorizer_labels = CountVectorizer(ngram_range=n_gram,
+                                               min_df=dest_count,
+                                               binary=True,
+                                               tokenizer=tokenizer,
+                                        token_pattern=token_pattern)
     X_2_train_labels = bigram_vectorizer_labels.fit_transform(target).toarray()
     print('Done!')
 

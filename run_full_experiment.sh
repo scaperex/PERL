@@ -19,6 +19,7 @@ python utils/pivot_selection.py \
 --src=${DATA_DIR}/${SRC_DOMAIN} \
 --dest=${DATA_DIR}/${TRG_DOMAIN} \
 --log_name=${LOG_NAME}
+--tokenizer_name=None
 
 # Step 2 - Run pivot-based finetuning on a pre-trained BERT
 # Finetuning params
@@ -51,7 +52,7 @@ python perl_pretrain.py \
 
 # Step 3 - Train a classifier on source domain labeled data then predict and evaluate on target domain.
 # Supervised task params
-PRE_TRAINED_EPOCH=1 # TODO Was 20
+PRE_TRAINED_EPOCH=1
 CNN_OUT_CHANNELS=32
 BATCH_SIZE=32
 CNN_FILTER_SIZE=9

@@ -734,10 +734,10 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
-                # TODO delete
-                if step == 100:
-                    print(f"{'='*10} Breaking the Training {'='*10}")
-                    break
+                # # TODO debug - delete
+                # if step == 100:
+                #     print(f"{'='*10} Breaking the Training {'='*10}")
+                #     break
             if (((cnt + 1) % args.save_every_num_epochs) == 0):
                 # Save a trained model
                 logger.info("** ** * Saving fine - tuned model ** ** * ")
