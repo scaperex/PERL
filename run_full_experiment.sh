@@ -1,11 +1,11 @@
 #!/bin/bash
 # Run this before if needed : sed -i -e 's/\r$//' run_full_experiment.sh
 # Finally, run this command : sh run_full_experiment.sh\
-DATA_DIR=data
+DATA_DIR=stancedata
 MODEL=feminist_to_abortion # books_to_dvd
 SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
 TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
-MODELS_DIR=models/${MODEL}
+MODELS_DIR=stancemodels/${MODEL}
 
 # Step 1 - Select pivot features
 # Pivot selection params

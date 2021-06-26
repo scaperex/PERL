@@ -134,7 +134,7 @@ class SentimentProcessor(DataProcessor):
         logger.info("LOOKING AT {}".format(train_path))
         with open(train_path, 'rb') as f:
             (train, labels) = pickle.load(f)
-        return self._create_examples(train, labels, 'train')
+        return self._create_examples(train, labels, data_dir, 'train')
 
     def get_dev_examples(self, data_dir, use_fold, fold_num):
         """See base class."""
@@ -147,7 +147,7 @@ class SentimentProcessor(DataProcessor):
         logger.info("LOOKING AT {}".format(test_path))
         with open(test_path, 'rb') as f:
             (test, labels) = pickle.load(f)
-        return self._create_examples(test, labels, 'dev')
+        return self._create_examples(test, labels, data_dir,'dev')
 
     def get_test_examples(self, data_dir):
         """See base class."""
@@ -155,14 +155,24 @@ class SentimentProcessor(DataProcessor):
         logger.info("LOOKING AT {}".format(test_path))
         with open(test_path, 'rb') as f:
             (test, labels) = pickle.load(f)
-        return self._create_examples(test, labels, 'dev_cross')
+        return self._create_examples(test, labels, data_dir, 'dev_cross')
 
-    def get_labels(self):
+    def get_labels(self, datadir):
         """See base class."""
-        return ["negative", "positive"]
+        print(datadir)
+        datadir = datadir.split("/")[0]
+        if datadir == 'data':
+            return ["negative", "positive"]
+        elif datadir == "stancedata":
+            return ['AGAINST', 'FAVOR', 'NONE']
 
-    def _create_examples(self, x, label, set_type):
+    def _create_examples(self, x, label, data_dir, set_type):
         """Creates examples for the training and dev sets."""
+        data_dir = data_dir.split("/")[0]
+        if data_dir == 'data':
+            labels = {0:"negative", 1:"positive"}
+        elif data_dir == "stancedata":
+            labels={0:'AGAINST',1:'FAVOR',2:'NONE'}
         examples = []
         for (i, data_point) in enumerate(zip(x, label)):
             if i == 0:
@@ -170,7 +180,7 @@ class SentimentProcessor(DataProcessor):
             guid = "%s-%s" % (set_type, i)
             text_a = data_point[0]
             text_b = None
-            label = "positive" if (data_point[1]==1 or data_point[1] == "positive") else "negative"
+            label = labels[data_point[1]]
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
@@ -572,7 +582,7 @@ def main():
 
     processor = SentimentProcessor()
 
-    label_list = processor.get_labels()
+    label_list = processor.get_labels(args.in_domain_data_dir)
     num_labels = len(label_list)
 
     train_examples = None
