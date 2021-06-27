@@ -697,7 +697,7 @@ def main():
 
         if args.local_rank == -1:
             # TODO num_samples=20000 debug num_samples=20
-            train_sampler = RandomSampler(train_dataset, num_samples=20000, replacement=True)
+            train_sampler = RandomSampler(train_dataset)#, num_samples=20)#, replacement=True)
         else:
             # TODO: check if this works with current data generator from disk that relies on next(file)
             # (it doesn't return item back by index)

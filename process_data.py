@@ -6,24 +6,57 @@ import matplotlib.pyplot as plt
 import re
 from sklearn.model_selection import train_test_split
 import preprocessor as p
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 
-
-def analyze_stance_data():
-    df['Target'].value_counts().plot.bar(rot=45)
-    plt.savefig('counts_per_domain.png', bbox_inches='tight')
+def analyze_stance_data(data_path):
+    df = pd.read_excel(data_path)
+    df['Target'].replace({'Hillary Clinton': 'hillary',
+                          'Feminist Movement': 'feminist',
+                          'Legalization of Abortion': 'abortion',
+                          'Donald Trump': 'trump',
+                          'Climate Change is a Real Concern': 'climate',
+                          'Atheism': 'atheism'}, inplace=True)
+    # df['Target'].value_counts().plot.bar(rot=45)
+    # plt.savefig('counts_per_domain.png', bbox_inches='tight')
 
     # df_train.drop(['Tweet', 'Stance'], axis=1).groupby(by=['Target', 'Sentiment']).size().plot.bar()
-    pd.pivot_table(df.drop(['Tweet', 'Stance'], axis=1), index='Target',
-                   columns='Sentiment', aggfunc='size').plot.bar(rot=45)
-    plt.title("#Records per sentiment and domain")
-    plt.ylabel("Count")
-    plt.xlabel("Domain")
-
-    pd.pivot_table(df_train.drop(['Tweet', 'Stance'], axis=1), index = 'Target',
-                   columns = 'Sentiment',aggfunc ='size').plot.bar()
-    plt.savefig('counts_per_sentiment_per_domain.png', bbox_inches='tight')
+    # pd.pivot_table(df.drop(['Tweet', 'Stance'], axis=1), index='Target',
+    #                columns='Sentiment', aggfunc='size').plot.bar(rot=45)
+    # plt.title("#Records per sentiment and domain")
+    # plt.ylabel("Count")
+    # plt.xlabel("Domain")
+    # plt.savefig('counts_per_sentiment_per_domain.png', bbox_inches='tight')
+    # plt.show()
+    #
+    # pd.pivot_table(df.drop(['Tweet', 'Sentiment'], axis=1), index='Target',
+    #                columns='Stance', aggfunc='size').plot.bar(rot=45)
+    # plt.title("#Records per Stance and domain")
+    # plt.ylabel("Count")
+    # plt.xlabel("Domain")
+    #
+    # plt.savefig('counts_per_stance_per_domain.png', bbox_inches='tight')
+    # plt.show()
+    y_sentiment = df["Sentiment"]
+    y_stance = df["Stance"]
+    y_sentiment.replace({'pos': 1,
+                             'neg': 0,
+                             'other': 2}, inplace=True)
+    y_stance.replace({'FAVOR': 1,
+                              'AGAINST': 0,
+                              'NONE': 2}, inplace=True)
+    ax = sns.heatmap(data=confusion_matrix(y_sentiment.values, y_stance.values, labels=[0,1,2]),
+                     annot=True,
+                     fmt='d',
+                     yticklabels=['negative', 'positive', 'other'],
+                     xticklabels=['against', 'favor', 'none'])
+    plt.savefig('labels_corrs.png', bbox_inches='tight')
     plt.show()
+
+
+
+
 
 def open_blitzer_data():
     src = 'books'
@@ -40,8 +73,6 @@ def open_blitzer_data():
 
     with open(src_path + "test", 'rb') as f:
         test = pickle.load(f)
-
-
 
 def filter_hashtags(tweet: str, hashtags: str):
     """
@@ -113,12 +144,13 @@ def preprocess_stance_data(data_path, label_name=None):
                 pickle.dump((x_dev, y_dev), f)
         else:
             with open(os.path.join(save_path, 'unlabeled'), 'wb') as f:
-                pickle.dump(x, f)
-
+                pickle.dump(x[:20000], f)
 
 if __name__ == '__main__':
-    label = 'Stance'
+    # label = 'Stance'
+    label = 'data'
     DATA_DIR = 'stancedata' if label == 'Stance' else 'data'
-    preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
-    preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')
+    # preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
+    # preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')
+    analyze_stance_data("RawStanceDataset/full_data.xlsx")
 
