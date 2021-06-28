@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 import preprocessor as p
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from sklearn.metrics import mutual_info_score
 
 
 def analyze_stance_data(data_path):
@@ -46,13 +47,15 @@ def analyze_stance_data(data_path):
     y_stance.replace({'FAVOR': 1,
                               'AGAINST': 0,
                               'NONE': 2}, inplace=True)
-    ax = sns.heatmap(data=confusion_matrix(y_sentiment.values, y_stance.values, labels=[0,1,2]),
-                     annot=True,
-                     fmt='d',
-                     yticklabels=['negative', 'positive', 'other'],
-                     xticklabels=['against', 'favor', 'none'])
-    plt.savefig('labels_corrs.png', bbox_inches='tight')
-    plt.show()
+    # ax = sns.heatmap(data=confusion_matrix(y_sentiment.values, y_stance.values, labels=[0,1,2]),
+    #                  annot=True,
+    #                  fmt='d',
+    #                  yticklabels=['negative', 'positive', 'other'],
+    #                  xticklabels=['against', 'favor', 'none'])
+    # plt.savefig('labels_corrs.png', bbox_inches='tight')
+    # plt.show()
+    #
+    print(f"MI: {mutual_info_score(y_stance, y_sentiment)}")
 
 
 def open_blitzer_data():

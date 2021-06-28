@@ -622,7 +622,7 @@ def main():
     # Prepare model
     model = BertForMaskedLM.from_pretrained(args.bert_model, output_dim=len(pivot2id_dict),
                                             init_embed=args.init_output_embeds, src=args.src_domain.split(os.sep)[1],
-                                            trg=args.trg_domain.split(os.sep)[1])
+                                            trg=args.trg_domain.split(os.sep)[1], pivot_dir=args.trg_domain.split(os.sep)[0])
     if args.fp16:
         model.half()
     model.to(device)
