@@ -55,9 +55,6 @@ def analyze_stance_data(data_path):
     plt.show()
 
 
-
-
-
 def open_blitzer_data():
     src = 'books'
 

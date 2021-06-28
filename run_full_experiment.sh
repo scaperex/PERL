@@ -17,11 +17,11 @@
 # BATCH_SIZE (32, 64) ---> 32
 # NUM_TRAIN_EPOCHS ---> 20
 
-DATA_DIR=stancedata
-MODEL_DIR=stancemodels
+#DATA_DIR=stancedata
+#MODEL_DIR=stancemodels
 
-#DATA_DIR=data
-#MODEL_DIR=models
+DATA_DIR=data
+MODEL_DIR=models
 
 # before running - delete the right model dir
 
