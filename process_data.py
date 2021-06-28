@@ -58,9 +58,6 @@ def analyze_stance_data(data_path):
     print(f"MI: {mutual_info_score(y_stance, y_sentiment)}")
 
 
-
-
-
 def open_blitzer_data():
     src = 'books'
 

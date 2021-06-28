@@ -17,15 +17,15 @@
 # BATCH_SIZE (32, 64) ---> 32
 # NUM_TRAIN_EPOCHS ---> 20
 
-DATA_DIR=stancedata
-MODEL_DIR=stancemodels
+#DATA_DIR=stancedata
+#MODEL_DIR=stancemodels
 
-#DATA_DIR=data
-#MODEL_DIR=models
+DATA_DIR=data
+MODEL_DIR=models
 
 # before running - delete the right model dir
 
-for MODEL in feminist_to_abortion abortion_to_feminist feminist_to_atheism atheism_to_feminist
+for MODEL in feminist_to_abortion  abortion_to_feminist feminist_to_atheism atheism_to_feminist
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
