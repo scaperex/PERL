@@ -25,7 +25,7 @@ MODEL_DIR=stancemodels
 
 # before running - delete the right model dir
 
-for MODEL in feminist_to_abortion  abortion_to_feminist climate_to_atheism atheism_to_climate
+for MODEL in feminist_to_abortion abortion_to_feminist feminist_to_atheism atheism_to_feminist
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
@@ -49,7 +49,7 @@ do
   # Finetuning params
   PIVOT_PROB=0.5
   NON_PIVOT_PROB=0.1
-  NUM_PRE_TRAIN_EPOCHS=20
+  NUM_PRE_TRAIN_EPOCHS=10
   SAVE_FREQ=${NUM_PRE_TRAIN_EPOCHS}
   UNFROZEN_BERT_LAYERS=2
 

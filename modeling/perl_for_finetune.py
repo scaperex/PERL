@@ -255,7 +255,7 @@ class BertForMaskedLM(BertPreTrainedModel):
     ```
     """
 
-    def __init__(self, config, output_dim, output_attentions=False, init_embed=True, src='books', trg='dvd'):
+    def __init__(self, config, output_dim, output_attentions=False, init_embed=True, src='books', trg='dvd', pivot_dir='data'):
         super(BertForMaskedLM, self).__init__(config)
         self.output_attentions = output_attentions
         self.output_dim = output_dim
@@ -265,7 +265,7 @@ class BertForMaskedLM(BertPreTrainedModel):
         self.cls.predictions.pivots_decoder = nn.Linear(self.bert.embeddings.word_embeddings.weight.size(1), output_dim,
                                                         bias=False)
         if init_embed:
-            init_emb = get_emb_weights(src, trg, num_pivots=output_dim-1)
+            init_emb = get_emb_weights(src, trg, num_pivots=output_dim-1, pivot_dir=pivot_dir)
             self.cls.predictions.pivots_decoder.weight.data[1:] = init_emb
 
         self.cls.predictions.pivots_bias = nn.Parameter(torch.zeros(output_dim))
