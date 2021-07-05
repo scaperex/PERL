@@ -51,7 +51,6 @@ from classification_model import CNNBertForSequenceClassification
 from logger import Logger
 from utils.logger import create_and_configer_logger
 
-
 # TODO: if you are using 'pytorch 1.5.0' you cannot run parallel. In case you are using 'pytorch 1.4.0' you can comment
 #  the following line
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -59,7 +58,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # logger = logging.getLogger(__name__)
 
 logger = create_and_configer_logger(log_name="log/supervised_task.log")
-
 
 
 class InputExample(object):
@@ -147,7 +145,7 @@ class SentimentProcessor(DataProcessor):
         logger.info("LOOKING AT {}".format(test_path))
         with open(test_path, 'rb') as f:
             (test, labels) = pickle.load(f)
-        return self._create_examples(test, labels, data_dir,'dev')
+        return self._create_examples(test, labels, data_dir, 'dev')
 
     def get_test_examples(self, data_dir):
         """See base class."""
@@ -170,9 +168,9 @@ class SentimentProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         data_dir = data_dir.split("/")[0]
         if data_dir == 'data':
-            labels = {0:"negative", 1:"positive"}
+            labels = {0: "negative", 1: "positive"}
         elif data_dir == "stancedata":
-            labels={0:'AGAINST',1:'FAVOR',2:'NONE'}
+            labels = {0: 'AGAINST', 1: 'FAVOR', 2: 'NONE'}
         examples = []
         for (i, data_point) in enumerate(zip(x, label)):
             if i == 0:
@@ -235,7 +233,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         assert len(segment_ids) == max_seq_length
 
         label_id = label_map[example.label]
-
 
         # if ex_index < 1:
         #     logger.info("*** Example ***")
@@ -316,8 +313,8 @@ def evaluate(eval_dataloader, model, device, tokenizer, num_labels=2):
         label_ids = label_ids.to(device)
 
         with torch.no_grad():
-             outputs = model(input_ids, segment_ids, input_mask, labels=None)
-             logits = outputs
+            outputs = model(input_ids, segment_ids, input_mask, labels=None)
+            logits = outputs
 
         # create eval loss and other metric required by the task
         loss_fct = CrossEntropyLoss()
@@ -337,9 +334,11 @@ def evaluate(eval_dataloader, model, device, tokenizer, num_labels=2):
     preds = preds[0]
     preds = np.argmax(preds, axis=1)
 
-    acc = simple_accuracy(preds, all_label_ids)
+    metrics = acc_and_f1(preds, all_label_ids)
+    acc = metrics['acc']
+    f1 = metrics['f1']
     model.train()
-    return acc, eval_loss
+    return acc, eval_loss, f1
 
 
 def make_DataLoader(data_dir, processor, tokenizer, label_list, max_seq_length, batch_size=6,
@@ -442,7 +441,7 @@ def main():
                         help="saves model weight each time epoch accuracy is maximum")
     parser.add_argument("--write_log_for_each_epoch",
                         action='store_true',
-                        help = "whether to write log file at the end of every epoch or not")
+                        help="whether to write log file at the end of every epoch or not")
     parser.add_argument("--max_seq_length",
                         default=128,
                         type=int,
@@ -506,7 +505,7 @@ def main():
     parser.add_argument('--save_according_to',
                         type=str,
                         default='acc',
-                        help="save results according to in domain dev acc or in domain dev loss")                  
+                        help="save results according to in domain dev acc or in domain dev loss")
     parser.add_argument('--optimizer',
                         type=str,
                         default='adam',
@@ -757,17 +756,13 @@ def main():
         # main training loop
         best_dev_acc = 0.0
         best_dev_loss = 100000.0
-        best_dev_cross_acc = 0.0
-        in_domain_best, cross_domain_best = {}, {}
-        in_domain_best['in'] = 0.0
-        in_domain_best['cross'] = 0.0
-        cross_domain_best['in'] = 0.0
-        cross_domain_best['cross'] = 0.0
+        results_best = {'in': 0.0, 'cross': 0.0, 'f1_in': 0.0, 'f1_cross': 0.0}
 
         for epoch in trange(int(args.num_train_epochs), desc="Epoch"):  # (int(args.num_train_epochs), desc="Epoch"):
 
             tr_loss = 0
             tr_acc = 0
+            tr_f1 = 0
 
             nb_tr_examples, nb_tr_steps = 0, 0
             for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
@@ -780,8 +775,9 @@ def main():
                 loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
                 preds = logits.detach().cpu().numpy()
                 preds = np.argmax(preds, axis=1)
-                tr_acc += compute_metrics(preds, label_ids.detach().cpu().numpy())["acc"]
-
+                metrics = acc_and_f1(preds, label_ids.detach().cpu().numpy())
+                tr_acc += metrics["acc"]
+                tr_f1 += metrics['f1']
 
                 if n_gpu > 1:
                     loss = loss.mean()  # mean() to average on multi-gpu.
@@ -809,29 +805,28 @@ def main():
 
             # run evaluation on dev set
             # dev-set loss
-            eval_results_dev = evaluate(eval_dataloader=eval_dataloader,
-                                        model=model,
-                                        device=device,
-                                        tokenizer=tokenizer,
-                                        num_labels=num_labels)
-
-            dev_acc, dev_loss = eval_results_dev[:2]
+            dev_acc, dev_loss, dev_f1 = evaluate(eval_dataloader=eval_dataloader,
+                                                 model=model,
+                                                 device=device,
+                                                 tokenizer=tokenizer,
+                                                 num_labels=num_labels)
 
             # train-set loss
             tr_loss /= nb_tr_steps
             tr_acc /= nb_tr_steps
+            tr_f1 /= nb_tr_steps
 
             # print and save results
-            result = {"acc": tr_acc, "loss": tr_loss, "dev_acc":dev_acc, "dev_loss": dev_loss}
+            result = {"acc": tr_acc, "loss": tr_loss, 'f1': tr_f1, "dev_acc": dev_acc, "dev_loss": dev_loss, 'dev_f1': dev_f1}
 
-            eval_results_test = evaluate(eval_dataloader=eval_cross_dataloader,
-                                         model=model,
-                                         device=device,
-                                         tokenizer=tokenizer,
-                                         num_labels=num_labels)
-            dev_cross_acc, dev_cross_loss = eval_results_test[:2]
+            dev_cross_acc, dev_cross_loss, dev_cross_f1 = evaluate(eval_dataloader=eval_cross_dataloader,
+                                                                   model=model,
+                                                                   device=device,
+                                                                   tokenizer=tokenizer,
+                                                                   num_labels=num_labels)
             result["dev_cross_acc"] = dev_cross_acc
             result["dev_cross_loss"] = dev_cross_loss
+            result["dev_cross_f1"] = dev_cross_f1
 
             results_logger.log_training(tr_loss, tr_acc, epoch)
             results_logger.log_validation(dev_loss, dev_acc, dev_cross_loss, dev_cross_acc, epoch)
@@ -863,7 +858,7 @@ def main():
 
             if args.save_on_epoch_end:
                 # Save a trained model
-                output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME + '.Epoch_{}'.format(epoch+1))
+                output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME + '.Epoch_{}'.format(epoch + 1))
                 torch.save(model_to_save.state_dict(), output_model_file)
 
             # save model with best performance on dev-set
@@ -872,23 +867,26 @@ def main():
                 output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME)
                 torch.save(model_to_save.state_dict(), output_model_file)
                 best_dev_acc = dev_acc
-            
+
             if args.save_according_to == 'acc':
                 if dev_acc > best_dev_acc:
                     best_dev_acc = dev_acc
-                    in_domain_best['in'] = best_dev_acc
-                    in_domain_best['cross'] = dev_cross_acc
+                    results_best['in'] = best_dev_acc
+                    results_best['cross'] = dev_cross_acc
+                    results_best['f1_in'] = dev_f1
+                    results_best['f1_cross'] = dev_cross_f1
 
             elif args.save_according_to == 'loss':
                 if dev_loss < best_dev_loss:
                     best_dev_loss = dev_loss
-                    in_domain_best['in'] = best_dev_loss
-                    in_domain_best['cross'] = dev_cross_acc
+                    results_best['in'] = best_dev_loss
+                    results_best['cross'] = dev_cross_acc
 
             if args.save_according_to == 'acc':
-                print('Best results in domain: Acc - {}, Cross Acc - {}'.format(in_domain_best['in'], in_domain_best['cross']))
+                print(f"Best results in domain: Acc - {results_best['in']} F1 - {results_best['f1_in']}, "
+                      f"Cross Acc - {results_best['cross']}, Cross F1 - {results_best['f1_cross']}")
             elif args.save_according_to == 'loss':
-                print('Best results in domain: Loss - {}, Cross Acc - {}'.format(in_domain_best['in'], in_domain_best['cross']))
+                print('Best results in domain: Loss - {}, Cross Acc - {}'.format(results_best['in'], results_best['cross']))
             if args.model_name is not None:
                 final_output_eval_file = os.path.join(args.output_dir, args.model_name + "-final_eval_results.txt")
             else:
@@ -896,16 +894,18 @@ def main():
 
             with open(final_output_eval_file, "w") as writer:
                 writer.write("Results:")
-                writer.write("%s = %s\n" % ('in', str(in_domain_best['in'])))
-                writer.write("%s = %s\n" % ('cross', str(in_domain_best['cross'])))
+                writer.write("%s = %s\n" % ('acc_in', str(results_best['in'])))
+                writer.write("%s = %s\n" % ('acc_cross', str(results_best['cross'])))
+                writer.write("%s = %s\n" % ('f1_in', str(results_best['f1_in'])))
+                writer.write("%s = %s\n" % ('f1_cross', str(results_best['f1_cross'])))
 
     elif args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         # dev-set loss
-        acc, dev_loss = evaluate(eval_dataloader=eval_dataloader,
-                                 model=model,
-                                 device=device,
-                                 tokenizer=tokenizer,
-                                 num_labels=num_labels)
+        acc, dev_loss, dev_f1 = evaluate(eval_dataloader=eval_dataloader,
+                                         model=model,
+                                         device=device,
+                                         tokenizer=tokenizer,
+                                         num_labels=num_labels)
 
         # print results
         print('Accuracy: {}'.format(acc))
