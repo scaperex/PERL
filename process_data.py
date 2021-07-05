@@ -84,8 +84,8 @@ def filter_hashtags(tweet: str, hashtags: str):
     """
     for hashtag in hashtags.split():
         tweet = tweet.replace("#" + hashtag, "")
-    tweet = re.sub(r"http\S+", "", tweet) # TODO change per decision
     return tweet
+
 
 def preprocess_stance_data(data_path, label_name=None):
     if label_name:
@@ -95,14 +95,12 @@ def preprocess_stance_data(data_path, label_name=None):
             df['Sentiment'].replace({'pos': 1,
                                      'neg': 0,
                                      'other': None}, inplace=True)
-            df.dropna(inplace=True)
-            df['Sentiment'] = df['Sentiment'].astype(int)
 
         elif label_name == 'Stance':
             df['Stance'].replace({'FAVOR': 1,
                                   'AGAINST': 0,
-                                  'NONE': 2}, inplace=True)
-
+                                  'NONE': None}, inplace=True)
+        df.dropna(inplace=True)
     else:
         df = pd.read_csv('RawStanceDataset/domain_tweets_all.txt', sep='\t', header=None)
         df.columns = ['tweet_ID', 'date', 'Tweet', 'hashtags', 'Target']
@@ -111,6 +109,14 @@ def preprocess_stance_data(data_path, label_name=None):
         df['Tweet'] = df.apply(lambda row: filter_hashtags(row['Tweet'], row['hashtags']), axis=1)
         # Remove tweets with multiple classes
         df = df[df["Target"].str.contains(",") == False]
+
+
+
+
+    # p.OPT.NUMBER, p.OPT.HASHTAG
+    p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY)
+    df['Tweet'] = df.apply(lambda row: p.clean(row['Tweet']), axis=1)
+    df['Tweet'].replace({'#': ' '}, inplace=True, regex=True)
 
     df['Tweet'] = df['Target'] + " " + df['Tweet']
 
@@ -121,9 +127,6 @@ def preprocess_stance_data(data_path, label_name=None):
                           'Climate Change is a Real Concern': 'climate',
                           'Atheism': 'atheism'}, inplace=True)
 
-
-    # TODO choose clean method
-    # df['Tweet'].replace({'#': '', "@": ''}, inplace=True, regex=True)
 
     # Save files seperately per class
     for _class in ['hillary', 'feminist', 'abortion', 'trump',
@@ -146,11 +149,12 @@ def preprocess_stance_data(data_path, label_name=None):
             with open(os.path.join(save_path, 'unlabeled'), 'wb') as f:
                 pickle.dump(x[:20000], f)
 
+
 if __name__ == '__main__':
-    # label = 'Stance'
-    label = 'data'
+    label = 'Stance'
+    # label = 'data'
     DATA_DIR = 'stancedata' if label == 'Stance' else 'data'
-    # preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
-    # preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')
-    analyze_stance_data("RawStanceDataset/full_data.xlsx")
+    preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
+    preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')
+    # analyze_stance_data("RawStanceDataset/full_data.xlsx")
 

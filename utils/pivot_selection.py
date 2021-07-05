@@ -47,8 +47,7 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     logger = logging.getLogger(__name__)
 
     # Load pre-trained model tokenizer (vocabulary):
-    if tokenizer =='None':
-        tokenizer = None
+
     if tokenizer is not None:
         tokenizer = BertTokenizer.from_pretrained(tokenizer).tokenize
 
