@@ -162,7 +162,7 @@ class SentimentProcessor(DataProcessor):
         if datadir == 'data':
             return ["negative", "positive"]
         elif datadir == "stancedata":
-            return ['AGAINST', 'FAVOR', 'NONE']
+            return ['AGAINST', 'FAVOR']
 
     def _create_examples(self, x, label, data_dir, set_type):
         """Creates examples for the training and dev sets."""
@@ -170,7 +170,7 @@ class SentimentProcessor(DataProcessor):
         if data_dir == 'data':
             labels = {0: "negative", 1: "positive"}
         elif data_dir == "stancedata":
-            labels = {0: 'AGAINST', 1: 'FAVOR', 2: 'NONE'}
+            labels = {0: 'AGAINST', 1: 'FAVOR'}
         examples = []
         for (i, data_point) in enumerate(zip(x, label)):
             if i == 0:
