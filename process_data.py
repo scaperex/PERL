@@ -4,12 +4,12 @@ import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 import re
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 import preprocessor as p
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from sklearn.metrics import mutual_info_score
-
+import numpy as np
 
 def analyze_stance_data(data_path):
     df = pd.read_excel(data_path)
@@ -135,24 +135,46 @@ def preprocess_stance_data(data_path, label_name=None):
         os.makedirs(save_path, exist_ok=True)
         x = df.loc[df["Target"] == _class, 'Tweet'].tolist()
 
-        print(f"Saving {len(x)} label_name={label_name} {_class} tweets to {save_path}")
         if label_name:
             y = df.loc[df["Target"] == _class, label_name].tolist()
+            print(f'Saving {len(x)} label_name={label_name} {_class} tweets to {save_path}. Positive/Favor Proportion: {sum(y) / len(y)}')
             with open(os.path.join(save_path, 'test'), 'wb') as f:
                 pickle.dump((x, y), f)
+
+            fold_test_save_path = os.path.join("5-fold_"+save_path, 'test')
+            os.makedirs("5-fold_"+save_path, exist_ok=True)
+            with open(fold_test_save_path, 'wb') as f:
+                pickle.dump((x, y), f)
+
+            skf = StratifiedKFold(n_splits=5)
+            x_array = np.array(x)
+            y_array = np.array(y)
+            for fold_index, (train_index, test_index) in enumerate(skf.split(x_array, y_array)):
+                x_train, x_test = x_array[train_index].tolist(), x_array[test_index].tolist()
+                y_train, y_test = y_array[train_index].tolist(), y_array[test_index].tolist()
+                fold_save_path = os.path.join("5-fold_"+DATA_DIR, _class, f'fold-{fold_index+1}')
+                os.makedirs(fold_save_path, exist_ok=True)
+                with open(os.path.join(fold_save_path, 'train'), 'wb') as f:
+                    pickle.dump((x_train, y_train), f)
+                with open(os.path.join(fold_save_path, 'dev'), 'wb') as f:
+                    pickle.dump((x_test, y_test), f)
+
+
             x_train, x_dev, y_train, y_dev = train_test_split(x, y, test_size=0.15, stratify=y, random_state=42)
             with open(os.path.join(save_path, 'train'), 'wb') as f:
                 pickle.dump((x_train, y_train), f)
             with open(os.path.join(save_path, 'dev'), 'wb') as f:
                 pickle.dump((x_dev, y_dev), f)
         else:
+            num_examples = 20000
+            print(f"Saving {num_examples} label_name={label_name} {_class} tweets to {save_path}")
             with open(os.path.join(save_path, 'unlabeled'), 'wb') as f:
-                pickle.dump(x[:20000], f)
+                pickle.dump(x[:num_examples], f)
 
 
 if __name__ == '__main__':
-    label = 'Stance'
-    # label = 'data'
+    # label = 'Stance'
+    label = 'Sentiment'
     DATA_DIR = 'stancedata' if label == 'Stance' else 'data'
     preprocess_stance_data("RawStanceDataset/full_data.xlsx", label_name=label)
     preprocess_stance_data('RawStanceDataset/domain_tweets_all.txt')

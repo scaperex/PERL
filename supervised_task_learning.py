@@ -124,8 +124,8 @@ class SentimentProcessor(DataProcessor):
     def get_train_examples(self, data_dir, use_fold, fold_num):
         """See base class."""
         if use_fold:
-            src = data_dir.split('/')[1]
-            fold_data_dir = '5-fold_data/' + src + '/fold-' + str(fold_num) + '/'
+            base_dir, src = data_dir.split('/')[:2]
+            fold_data_dir = f'5-fold_{base_dir}/' + src + '/fold-' + str(fold_num) + '/'
             train_path = os.path.join(fold_data_dir, "train")
         else:
             train_path = os.path.join(data_dir, "train")
@@ -137,8 +137,8 @@ class SentimentProcessor(DataProcessor):
     def get_dev_examples(self, data_dir, use_fold, fold_num):
         """See base class."""
         if use_fold:
-            src = data_dir.split('/')[1]
-            fold_data_dir = '5-fold_data/' + src + '/fold-' + str(fold_num) + '/'
+            base_dir, src = data_dir.split('/')[:2]
+            fold_data_dir = f'5-fold_{base_dir}/' + src + '/fold-' + str(fold_num) + '/'
             test_path = os.path.join(fold_data_dir, "dev")
         else:
             test_path = os.path.join(data_dir, "dev")

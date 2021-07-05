@@ -17,15 +17,15 @@
 # BATCH_SIZE (32, 64) ---> 32
 # NUM_TRAIN_EPOCHS ---> 20
 
-#DATA_DIR=stancedata
-#MODEL_DIR=stancemodels
+DATA_DIR=stancedata
+MODEL_DIR=stancemodels
 
-DATA_DIR=data
-MODEL_DIR=models
+#DATA_DIR=data
+#MODEL_DIR=models
 
 # before running - delete the right model dir
 
-for MODEL in feminist_to_abortion  abortion_to_feminist feminist_to_atheism atheism_to_feminist
+for MODEL in feminist_to_abortion abortion_to_feminist feminist_to_atheism atheism_to_feminist
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
@@ -42,8 +42,8 @@ do
   --pivot_min_st=${PIV_MN_ST} \
   --src=${DATA_DIR}/${SRC_DOMAIN} \
   --dest=${DATA_DIR}/${TRG_DOMAIN} \
-  --log_name=${LOG_NAME} \
-  --tokenizer_name=None
+  --log_name=${LOG_NAME}
+
 
   # Step 2 - Run pivot-based finetuning on a pre-trained BERT
   # Finetuning params
@@ -71,15 +71,12 @@ do
    --init_output_embeds \
    --train_output_embeds
 
-   # TODO init_output_embeds is "R"-PERL?
-
   # Step 3 - Train a classifier on source domain labeled data then predict and evaluate on target domain.
   # Supervised task params
   PRE_TRAINED_EPOCH=${NUM_PRE_TRAIN_EPOCHS}
   CNN_OUT_CHANNELS=32
   BATCH_SIZE=32
   CNN_FILTER_SIZE=9
-  FOLD_NUM=1
   NUM_TRAIN_EPOCHS=5
 
   mkdir -p 5-fold-hyper-tune
@@ -89,27 +86,32 @@ do
   mkdir -p ${TEMP_DIR}/
   mkdir -p 5-fold-hyper-tune/${MODEL}/
 
-  cp ${MODELS_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin ${TEMP_DIR}
 
-  python supervised_task_learning.py \
-  --in_domain_data_dir=${DATA_DIR}/${SRC_DOMAIN}/ \
-  --cross_domain_data_dir=${DATA_DIR}/${TRG_DOMAIN}/ \
-  --do_train \
-  --output_dir=${TEMP_DIR}/ \
-  --load_model \
-  --model_name=pytorch_model${PRE_TRAINED_EPOCH}.bin \
-  --cnn_window_size=${CNN_FILTER_SIZE} \
-  --cnn_out_channels=${CNN_OUT_CHANNELS} \
-  --learning_rate=5e-5 \
-  --train_batch_size=${BATCH_SIZE} \
-  --num_train_epochs=${NUM_TRAIN_EPOCHS} \
-  --save_according_to=acc \
-  --write_log_for_each_epoch
+  for FOLD_NUM in 1 2 3 4 5
+  do
+    cp ${MODELS_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin ${TEMP_DIR}
 
-  COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin-final_eval_results.txt
+    python supervised_task_learning.py \
+    --in_domain_data_dir=${DATA_DIR}/${SRC_DOMAIN}/ \
+    --cross_domain_data_dir=${DATA_DIR}/${TRG_DOMAIN}/ \
+    --do_train \
+    --output_dir=${TEMP_DIR}/ \
+    --load_model \
+    --model_name=pytorch_model${PRE_TRAINED_EPOCH}.bin \
+    --cnn_window_size=${CNN_FILTER_SIZE} \
+    --cnn_out_channels=${CNN_OUT_CHANNELS} \
+    --learning_rate=5e-5 \
+    --train_batch_size=${BATCH_SIZE} \
+    --num_train_epochs=${NUM_TRAIN_EPOCHS} \
+    --save_according_to=acc \
+    --use_fold \
+    --fold_num=${FOLD_NUM} \
+    --write_log_for_each_epoch
 
-  COPY_TO_PATH=5-fold-hyper-tune/${MODEL}/ep-${PRE_TRAINED_EPOCH}_ch-${CNN_OUT_CHANNELS}_batch-${BATCH_SIZE}_filt-${CNN_FILTER_SIZE}_fold-${FOLD_NUM}.txt
-  cp ${COPY_FROM_PATH} ${COPY_TO_PATH}
-  rm ${TEMP_DIR}/*
+    COPY_FROM_PATH=${TEMP_DIR}/pytorch_model${PRE_TRAINED_EPOCH}.bin-final_eval_results.txt
 
+    COPY_TO_PATH=5-fold-hyper-tune/${MODEL}/ep-${PRE_TRAINED_EPOCH}_ch-${CNN_OUT_CHANNELS}_batch-${BATCH_SIZE}_filt-${CNN_FILTER_SIZE}_fold-${FOLD_NUM}.txt
+    cp ${COPY_FROM_PATH} ${COPY_TO_PATH}
+    rm ${TEMP_DIR}/*
+  done
 done
