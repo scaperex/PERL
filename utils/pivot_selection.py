@@ -4,6 +4,8 @@
 
 import argparse
 import logging
+
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import mutual_info_score
 import pickle
@@ -124,6 +126,7 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     if not isinstance(pivot_num, list):
         pivot_num = [pivot_num]
     names = []
+    pivots_df = []
     for i, MI_word in enumerate(MIsorted):
         name = bigram_vectorizer.get_feature_names()[MI_word]
 
@@ -138,9 +141,8 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
             names.append(name)
             pivotsCounts.append(bigram_vectorizer_unlabeled.get_feature_names().index(name))
             c+=1
-            logger.info(f"feature is: {name} its MI is: {RMI[MI_word]} Counts in source {s_count} in target {t_count}")
-            # print("feature is: ",name," its MI is: ",RMI[MI_word], ". Counts in source ", s_count," in target ",t_count)
-
+            logger.info(f"feature: {name}; MI: {RMI[MI_word]}; Counts in source: {s_count}; in target: {t_count}")
+            pivots_df.append([name, RMI[MI_word], s_count, t_count])
         if c>=max(pivot_num):
             break
 
@@ -148,12 +150,14 @@ def preproc(pivot_num, pivot_min_st, src, dest, tokenizer=None, n_gram=(1,1)):
     if n_gram[1] == 2:
         sfx = "_bi"
 
-
     filename = base_path + data_dir + '/pivots/' + src + "_to_" + dest
     if not os.path.exists(filename):
         os.makedirs(filename)
 
     for num in pivot_num:
+        pivots_df = pd.DataFrame(pivots_df, columns=['name', 'MI', 'Count in Source', 'Count in Target'])
+        pivots_df.to_csv(filename + "/" + str(pivot_num[0]) + sfx + '_raw.tsv', index=False, sep='\t')
+
         with open(filename + "/" + str(pivot_num[0]) + sfx, 'wb') as f:
             pickle.dump(names[:num], f)
 

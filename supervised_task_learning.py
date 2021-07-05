@@ -495,8 +495,7 @@ def main():
                         default=42,
                         help="random seed for initialization")
     parser.add_argument('--use_fold',
-                        type=bool,
-                        default=False,
+                        action='store_true',
                         help="Whether to use 5-fold split data")
     parser.add_argument('--fold_num',
                         type=int,

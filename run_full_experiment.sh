@@ -24,8 +24,8 @@ MODEL_DIR=stancemodels
 #MODEL_DIR=models
 
 # before running - delete the right model dir
-
-for MODEL in feminist_to_abortion abortion_to_feminist feminist_to_atheism atheism_to_feminist
+# feminist - atheism - hillary
+for MODEL in feminist_to_atheism atheism_to_feminist feminist_to_hillary hillary_to_feminist atheism_to_hillary hillary_to_atheism
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
