@@ -56,7 +56,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 class BERTDataset(Dataset):
     def __init__(self, src_domain, trg_domain, tokenizer, seq_len, pivot2id_dict, encoding="utf-8", corpus_lines=None,
-                 on_memory=True, pivot_prob=0.5, non_pivot_prob=0.1):
+                 on_memory=True, pivot_prob=0.5, non_pivot_prob=0.1, baseline=False):
         self.vocab = tokenizer.vocab
         self.tokenizer = tokenizer
         self.seq_len = seq_len
@@ -135,24 +135,24 @@ class BERTDataset(Dataset):
             else:
                 self.all_docs.append(doc)
 
-            doc = []
+            if not baseline:
+                doc = []
+                for line in corpus_trg:
+                    line = line.strip()
+                    if line == "":
+                        self.all_docs.append(doc)
+                        doc = []
+                    else:
+                        # store as one sample
+                        sample = {"doc_id": len(self.all_docs),
+                                  "line": len(doc)}
+                        self.sample_to_doc.append(sample)
+                        doc.append(line)
+                        self.corpus_lines = self.corpus_lines + 1
 
-            for line in corpus_trg:
-                line = line.strip()
-                if line == "":
+                # if last row in file is not empty
+                if self.all_docs[-1] != doc:
                     self.all_docs.append(doc)
-                    doc = []
-                else:
-                    # store as one sample
-                    sample = {"doc_id": len(self.all_docs),
-                              "line": len(doc)}
-                    self.sample_to_doc.append(sample)
-                    doc.append(line)
-                    self.corpus_lines = self.corpus_lines + 1
-
-            # if last row in file is not empty
-            if self.all_docs[-1] != doc:
-                self.all_docs.append(doc)
 
             self.num_docs = len(self.all_docs)
 
@@ -545,11 +545,16 @@ def main():
                         action='store_true',
                         help="Whether to use 16-bit float precision instead of 32-bit")
     parser.add_argument('--init_output_embeds',
-                        action='store_true',
+                        type=str,
+                        default=False,
                         help="Whether to initialize pivots decoder with BERT embedding or not.")
     parser.add_argument('--train_output_embeds',
                         action='store_true',
                         help="Whether to train pivots decoder or not.")
+    parser.add_argument('--do_baseline',
+                        type=str,
+                        default=False,
+                        help="Whether to do baseline training - without pivots, only on source.")
     parser.add_argument('--loss_scale',
                         type=float, default=0,
                         help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n"
@@ -557,7 +562,8 @@ def main():
                              "Positive power of 2: static loss scaling value.\n")
 
     args = parser.parse_args()
-
+    args.init_output_embeds = eval(args.init_output_embeds)
+    args.do_baseline = eval(args.do_baseline)
     logger.info(args)
 
     if args.local_rank == -1 or args.no_cuda:
@@ -576,16 +582,17 @@ def main():
         raise ValueError("Invalid gradient_accumulation_steps parameter: {}, should be >= 1".format(
             args.gradient_accumulation_steps))
 
-    print("---- Pivots Path:", args.pivot_path)
-    pickle_in = open(args.pivot_path, "rb")
-    pivot_list = pickle.load(pickle_in)
     pivot2id_dict = {}
     id2pivot_dict = {}
-    pivot2id_dict['NONE'] = 0
-    id2pivot_dict[0] = 'NONE'
-    for id, feature in enumerate(pivot_list):
-        pivot2id_dict[feature] = id+1
-        id2pivot_dict[id+1] = feature
+    if not args.do_baseline:
+        print("---- Pivots Path:", args.pivot_path)
+        pickle_in = open(args.pivot_path, "rb")
+        pivot_list = pickle.load(pickle_in)
+        pivot2id_dict['NONE'] = 0
+        id2pivot_dict[0] = 'NONE'
+        for id, feature in enumerate(pivot_list):
+            pivot2id_dict[feature] = id+1
+            id2pivot_dict[id+1] = feature
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
 
@@ -613,14 +620,18 @@ def main():
         print("Loading Train Dataset from", args.src_domain, "and from", args.trg_domain)
         train_dataset = BERTDataset(args.src_domain, args.trg_domain, tokenizer, seq_len=args.max_seq_length,
                                     pivot2id_dict=pivot2id_dict, corpus_lines=None, on_memory=args.on_memory,
-                                    pivot_prob=args.pivot_prob, non_pivot_prob=args.non_pivot_prob)
+                                    pivot_prob=args.pivot_prob, non_pivot_prob=args.non_pivot_prob, baseline=args.do_baseline)
         num_train_optimization_steps = int(
             len(train_dataset) / args.train_batch_size / args.gradient_accumulation_steps) * args.num_train_epochs
         if args.local_rank != -1:
             num_train_optimization_steps = num_train_optimization_steps // torch.distributed.get_world_size()
 
     # Prepare model
-    model = BertForMaskedLM.from_pretrained(args.bert_model, output_dim=len(pivot2id_dict),
+    if args.do_baseline:
+        output_dim = len(tokenizer.vocab)
+    else:
+        output_dim = len(pivot2id_dict)
+    model = BertForMaskedLM.from_pretrained(args.bert_model, output_dim=output_dim,
                                             init_embed=args.init_output_embeds, src=args.src_domain.split(os.sep)[1],
                                             trg=args.trg_domain.split(os.sep)[1], pivot_dir=args.trg_domain.split(os.sep)[0])
     if args.fp16:
@@ -697,7 +708,7 @@ def main():
 
         if args.local_rank == -1:
             # TODO num_samples=20000 debug num_samples=20
-            train_sampler = RandomSampler(train_dataset) #, num_samples=20, replacement=True)
+            train_sampler = RandomSampler(train_dataset)#, num_samples=20, replacement=True)
         else:
             # TODO: check if this works with current data generator from disk that relies on next(file)
             # (it doesn't return item back by index)

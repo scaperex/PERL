@@ -19,7 +19,7 @@
 
 DATA_DIR=stancedata
 MODEL_DIR=stancemodels
-
+DOBASELINE=False
 #DATA_DIR=data
 #MODEL_DIR=models
 
@@ -37,13 +37,15 @@ do
   PIV_MN_ST=20
   LOG_NAME="log/pivot.log"
 
-  python utils/pivot_selection.py \
-  --pivot_num=${NUM_PIVOTS} \
-  --pivot_min_st=${PIV_MN_ST} \
-  --src=${DATA_DIR}/${SRC_DOMAIN} \
-  --dest=${DATA_DIR}/${TRG_DOMAIN} \
-  --log_name=${LOG_NAME}
-
+  if [ $DOBASELINE == False ]
+  then
+    python utils/pivot_selection.py \
+    --pivot_num=${NUM_PIVOTS} \
+    --pivot_min_st=${PIV_MN_ST} \
+    --src=${DATA_DIR}/${SRC_DOMAIN} \
+    --dest=${DATA_DIR}/${TRG_DOMAIN} \
+    --log_name=${LOG_NAME}
+  fi
 
   # Step 2 - Run pivot-based finetuning on a pre-trained BERT
   # Finetuning params
@@ -58,6 +60,13 @@ do
   OUTPUT_DIR_NAME=${MODELS_DIR}
   PIVOTS_PATH=${DATA_DIR}/pivots/${MODEL}/${NUM_PIVOTS}_bi
 
+  if [ $DOBASELINE == True ]
+  then
+    INIT_OUTPUT_EMBEDS=False
+  else
+    INIT_OUTPUT_EMBEDS=True
+  fi
+
   python perl_pretrain.py \
    --src_domain=${DATA_DIR}/${SRC_DOMAIN} \
    --trg_domain=${DATA_DIR}/${TRG_DOMAIN} \
@@ -68,7 +77,8 @@ do
    --pivot_prob=${PIVOT_PROB} \
    --non_pivot_prob=${NON_PIVOT_PROB} \
    --num_of_unfrozen_bert_layers=${UNFROZEN_BERT_LAYERS} \
-   --init_output_embeds \
+   --init_output_embeds=${INIT_OUTPUT_EMBEDS} \
+   --do_baseline=${DOBASELINE} \
    --train_output_embeds
 
   # Step 3 - Train a classifier on source domain labeled data then predict and evaluate on target domain.
