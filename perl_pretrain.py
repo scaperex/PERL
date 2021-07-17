@@ -135,24 +135,24 @@ class BERTDataset(Dataset):
             else:
                 self.all_docs.append(doc)
 
-            if not baseline:
-                doc = []
-                for line in corpus_trg:
-                    line = line.strip()
-                    if line == "":
-                        self.all_docs.append(doc)
-                        doc = []
-                    else:
-                        # store as one sample
-                        sample = {"doc_id": len(self.all_docs),
-                                  "line": len(doc)}
-                        self.sample_to_doc.append(sample)
-                        doc.append(line)
-                        self.corpus_lines = self.corpus_lines + 1
-
-                # if last row in file is not empty
-                if self.all_docs[-1] != doc:
+            # if not baseline:
+            doc = []
+            for line in corpus_trg:
+                line = line.strip()
+                if line == "":
                     self.all_docs.append(doc)
+                    doc = []
+                else:
+                    # store as one sample
+                    sample = {"doc_id": len(self.all_docs),
+                              "line": len(doc)}
+                    self.sample_to_doc.append(sample)
+                    doc.append(line)
+                    self.corpus_lines = self.corpus_lines + 1
+
+            # if last row in file is not empty
+            if self.all_docs[-1] != doc:
+                self.all_docs.append(doc)
 
             self.num_docs = len(self.all_docs)
 

@@ -19,9 +19,7 @@
 
 DATA_DIR=stancedata
 MODEL_DIR=stancemodels
-DOBASELINE=False
-#DATA_DIR=data
-#MODEL_DIR=models
+DOBASELINE=True
 
 # before running - delete the right model dir
 # feminist - atheism - hillary
