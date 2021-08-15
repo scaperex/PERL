@@ -17,13 +17,13 @@
    - `sentiment_results_run1`
    - `sentiment_models_run1`
    
-5. Updated (finetune source+target) DOBASELINE=True RUNNING
+5. Updated (finetune source+target) DOBASELINE=True DONE
    - `stance_results_baseline2`
    - `stance_models_baseline2`
    
    
-6. Sentiment (finetune source+target) DOBASELINE=True TODO
-   (change in changes.md to data & models )
+6. Sentiment (finetune source+target) DOBASELINE=True DONE
+   (change in run full exp to data & models )
    - `sentiment_results_baseline2`
    - `sentiment_models_baseline2`
    

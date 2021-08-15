@@ -19,11 +19,12 @@
 
 DATA_DIR=stancedata
 MODEL_DIR=stancemodels
-DOBASELINE=True
+DOBASELINE=False
 
 # before running - delete the right model dir
 # feminist - atheism - hillary
-for MODEL in feminist_to_atheism atheism_to_feminist feminist_to_hillary hillary_to_feminist atheism_to_hillary hillary_to_atheism
+#for MODEL in feminist_to_atheism atheism_to_feminist feminist_to_hillary hillary_to_feminist atheism_to_hillary hillary_to_atheism
+for MODEL in feminist_to_hillary
 do
   SRC_DOMAIN="${MODEL%_to_*}" # split model name according to '_to_' and take the prefix
   TRG_DOMAIN="${MODEL#*_to_}" # split model name according to '_to_' and take the suffix
@@ -51,7 +52,7 @@ do
   NON_PIVOT_PROB=0.1
   NUM_PRE_TRAIN_EPOCHS=10
   SAVE_FREQ=${NUM_PRE_TRAIN_EPOCHS}
-  UNFROZEN_BERT_LAYERS=2
+  UNFROZEN_BERT_LAYERS=8
 
   mkdir -p ${MODELS_DIR}
 
