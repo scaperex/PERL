@@ -1,6 +1,6 @@
 import os
 
-base_paths = ["stance_results_baseline2","sentiment_results_baseline2"]
+base_paths = ["stance_results_8unfrozen"]
 for base_path in base_paths:
 
     print("\n", base_path)

@@ -31,7 +31,7 @@ def analyze_stance_data(data_path):
                           'AGAINST': 'Against',
                           'NONE': 'Neutral'}, inplace=True)
     # df['Target'].value_counts().plot.bar(rot=45)
-    # plt.savefig('counts_per_domain.png', bbox_inches='tight')
+    # plt.savefig('counts_per_domain.pdf', bbox_inches='tight')
 
     # df.drop(['Tweet', 'Stance'], axis=1).groupby(by=['Target', 'Sentiment']).size().plot.bar()
     pd.pivot_table(df.drop(['Tweet', 'Stance'], axis=1), index='Target',
@@ -41,7 +41,7 @@ def analyze_stance_data(data_path):
     # plt.title("Number of Instances per Domain, by Sentiment Label")
     plt.ylabel("Count")
     plt.xlabel("Domain")
-    plt.savefig('counts_per_sentiment_per_domain.png', bbox_inches='tight')
+    plt.savefig('counts_per_sentiment_per_domain.pdf', bbox_inches='tight')
     plt.show()
 
     pd.pivot_table(df.drop(['Tweet', 'Sentiment'], axis=1), index='Target',
@@ -52,7 +52,7 @@ def analyze_stance_data(data_path):
     plt.ylabel("Count")
     plt.xlabel("Domain")
 
-    plt.savefig('counts_per_stance_per_domain.png', bbox_inches='tight')
+    plt.savefig('counts_per_stance_per_domain.pdf', bbox_inches='tight')
     plt.show()
     # y_sentiment = df["Sentiment"]
     # y_stance = df["Stance"]
@@ -67,7 +67,7 @@ def analyze_stance_data(data_path):
     #                  fmt='d',
     #                  yticklabels=['negative', 'positive', 'other'],
     #                  xticklabels=['against', 'favor', 'none'])
-    # plt.savefig('labels_corrs.png', bbox_inches='tight')
+    # plt.savefig('labels_corrs.pdf', bbox_inches='tight')
     # plt.show()
     #
     # print(f"MI: {mutual_info_score(y_stance, y_sentiment)}")

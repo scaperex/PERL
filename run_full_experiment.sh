@@ -50,8 +50,8 @@ do
   # Finetuning params
   PIVOT_PROB=0.5
   NON_PIVOT_PROB=0.1
-  NUM_PRE_TRAIN_EPOCHS=10
-  SAVE_FREQ=${NUM_PRE_TRAIN_EPOCHS}
+  NUM_PRE_TRAIN_EPOCHS=40
+  SAVE_FREQ=10
   UNFROZEN_BERT_LAYERS=8
 
   mkdir -p ${MODELS_DIR}
@@ -86,7 +86,7 @@ do
   CNN_OUT_CHANNELS=32
   BATCH_SIZE=32
   CNN_FILTER_SIZE=9
-  NUM_TRAIN_EPOCHS=5
+  NUM_TRAIN_EPOCHS=10
 
   mkdir -p 5-fold-hyper-tune
   mkdir 5-fold-hyper-tune/${MODEL}/
